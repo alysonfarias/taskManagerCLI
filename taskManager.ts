@@ -1,13 +1,19 @@
+import * as fs from 'fs';
+
+export enum Priority {
+    Low = 'low',
+    Medium = 'medium',
+    High = 'high',
+}
+
 export interface Task {
     id: number;
     title: string;
     description: string;
     dueDate: string;
-    priority: 'low' | 'medium' | 'high';
-    completed: boolean
+    priority: Priority;
+    completed: boolean;
 }
-
-import * as fs from 'fs';
 
 export class TaskManager {
     tasks: Task[] = [];
@@ -17,7 +23,8 @@ export class TaskManager {
         this.loadTasks();
     }
 
-    addTask(title: string, description: string, dueDate: string, priority: 'low' | 'medium' | 'high'): void {
+    // Add a new task
+    addTask(title: string, description: string, dueDate: string, priority: Priority): void {
         const newTask: Task = {
             id: this.tasks.length ? this.tasks[this.tasks.length - 1].id + 1 : 1,
             title,
@@ -25,20 +32,21 @@ export class TaskManager {
             dueDate,
             priority,
             completed: false
-        }
-        this.tasks.push(newTask)
+        };
+        this.tasks.push(newTask);
         this.saveTasks();
-        console.log('Task added', newTask);
+        console.log('Task added:', newTask);
     }
 
-    listTasks(filterBy?: { priority?: 'low' | 'medium' | 'high', dueDate?: string }): Task[] {
+    // List all tasks or filter by priority/due date
+    listTasks(filterBy?: { priority?: Priority, dueDate?: string }): Task[] {
         let filteredTasks = this.tasks;
 
-        if(filterBy?.priority) {
-            filteredTasks = filteredTasks.filter(task => task.priority === filterBy.priority)
+        if (filterBy?.priority) {
+            filteredTasks = filteredTasks.filter(task => task.priority === filterBy.priority);
         }
 
-        if(filterBy?.dueDate){
+        if (filterBy?.dueDate) {
             filteredTasks = filteredTasks.filter(task => task.dueDate === filterBy.dueDate);
         }
 
@@ -46,31 +54,34 @@ export class TaskManager {
         return filteredTasks;
     }
 
+    // Mark task as complete
     completeTask(id: number): void {
         const task = this.tasks.find(t => t.id === id);
-
-        if(task) {
+        if (task) {
             task.completed = true;
             this.saveTasks();
-            console.log(`Task ${id} marked as complete`);
+            console.log(`Task ${id} marked as complete.`);
         } else {
-            console.log(`Task with ID ${id} not found`);
+            console.log(`Task with ID ${id} not found.`);
         }
     }
 
+    // Delete a task by ID
     deleteTask(id: number): void {
         this.tasks = this.tasks.filter(task => task.id !== id);
         this.saveTasks();
-        console.log(`Task ${id} deleted`)
+        console.log(`Task ${id} deleted.`);
     }
 
+    // Load tasks from JSON file
     loadTasks(): void {
-        if(fs.existsSync(this.filePath)) {
+        if (fs.existsSync(this.filePath)) {
             const data = fs.readFileSync(this.filePath, 'utf8');
             this.tasks = JSON.parse(data) || [];
         }
     }
 
+    // Save tasks to JSON file
     saveTasks(): void {
         fs.writeFileSync(this.filePath, JSON.stringify(this.tasks, null, 2));
     }
